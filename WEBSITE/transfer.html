@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transfer Funds</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-color: #222;
+      --subtext-color: #555;
+      --primary-color: #4ca1af;
+    }
+
+    body.dark-mode {
+      --bg-gradient: linear-gradient(135deg, #1a1a1a, #333);
+      --card-bg: #1e1e1e;
+      --text-color: #f5f5f5;
+      --subtext-color: #ccc;
+      --primary-color: #90caf9;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: var(--text-color);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h3 {
+      text-align: center;
+      margin: 40px 0 30px;
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    .card {
+      background: var(--card-bg) !important;
+      color: var(--text-color) !important;
+      border-radius: 12px;
+      transition: 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: #f1f1f1 !important;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .transfer-option {
+      margin-top: 15px;
+    }
+
+    .form-control {
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-color);
+      border: 2px solid #0c0c0b;
+      border-radius: 8px;
+    }
+
+    .form-control:focus {
+      border-color: #040403;
+      box-shadow: 0 0 0 0.2rem rgba(255, 209, 102, 0.4);
+      background-color: rgba(255, 255, 255, 0.2);
+      color: var(--text-color);
+    }
+
+    .form-control::placeholder {
+      color: #777;
+    }
+
+    label {
+      font-weight: 500;
+    }
+
+    .btn-custom {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      font-weight: bold;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 25px;
+    }
+
+    .btn-custom:hover {
+      background-color: #ffd166;
+      color: #000;
+    }
+
+   
+  </style>
+</head>
+<body>
+ 
+  <div id="header"></div>
+
+  <div class="container my-5">
+    <h3>Transfer Funds</h3>
+    <div class="row g-4 justify-content-center">
+
+      <!-- Self Transfer Card -->
+      <div class="col-md-4">
+        <div class="card h-100" onclick="showForm('self')">
+          <div class="card-body text-center">
+            <h5 class="card-title">Self Transfer</h5>
+          <div id="selfForm" class="transfer-option" style="display:none;" onclick="event.stopPropagation()">
+              <div class="mb-3 text-start">
+                <label>From Account</label>
+                <select id="selfFromAccount" class="form-select" required onclick="event.stopPropagation()">
+                  <option value="">Select account</option>
+                </select>
+              </div>
+              <div class="mb-3 text-start">
+                <label>To Account</label>
+                <select id="selfToAccount" class="form-select" required onclick="event.stopPropagation()">
+                  <option value="">Select account</option>
+                </select>
+              </div>
+              <div class="mb-3 text-start">
+                <label>Amount</label>
+                <input type="number" id="selfAmount" class="form-control" required>
+              </div>
+              <button onclick="handleSelfTransfer()" class="btn btn-success w-100">Transfer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank Transfer Card -->
+      <div class="col-md-4">
+        <div class="card h-100" onclick="showForm('bank')">
+          <div class="card-body text-center">
+            <h5 class="card-title">Bank Transfer</h5>
+            <div id="bankForm" class="transfer-option" style="display:none;">
+              <div class="mb-3 text-start">
+                <label>Recipient Account Number</label>
+                <input type="text" id="bankAccount" class="form-control" required>
+              </div>
+              <div class="mb-3 text-start">
+                <label>IFSC Code</label>
+                <input type="text" id="bankIFSC" class="form-control" required>
+              </div>
+              <div class="mb-3 text-start">
+                <label>Amount</label>
+                <input type="number" id="bankAmount" class="form-control" required>
+              </div>
+              <button onclick="promptBankFromAccount()" class="btn btn-success w-100">Transfer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPI Transfer Card -->
+      <div class="col-md-4">
+        <div class="card h-100" onclick="showForm('upi')">
+          <div class="card-body text-center">
+            <h5 class="card-title">UPI Transfer</h5>
+            <div id="upiForm" class="transfer-option" style="display:none;">
+              <div class="mb-3 text-start">
+                <label>UPI ID</label>
+                <input type="text" id="upiId" class="form-control" placeholder="example@upi" required>
+              </div>
+              <div class="mb-3 text-start">
+                <label>Category</label>
+                <select id="upiCategory" class="form-select" required>
+                  <option value="">Select category</option>
+                  <option value="Groceries">Groceries</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="mb-3 text-start">
+                <label>Amount</label>
+                <input type="number" id="upiAmount" class="form-control" required>
+              </div>
+              <button onclick="promptUPIFromAccount()" class="btn btn-success w-100">Transfer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Load header and footer
+    fetch('header2.html')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('header').innerHTML = data;
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const profileInitial = document.getElementById('profileInitial');
+        if (currentUser && currentUser.name) {
+          profileInitial.textContent = currentUser.name.charAt(0).toUpperCase();
+          profileInitial.style.backgroundColor = '#f39c12';
+        } else {
+          profileInitial.textContent = 'U';
+          profileInitial.style.backgroundColor = '#f39c12';
+        }
+      });
+
+    fetch('footer.html')
+      .then(res => res.text())
+      .then(data => document.getElementById('footer').innerHTML = data);
+
+    function showForm(type) {
+      document.getElementById("selfForm").style.display = "none";
+      document.getElementById("bankForm").style.display = "none";
+      document.getElementById("upiForm").style.display = "none";
+
+      if (type === 'self') {
+        document.getElementById("selfForm").style.display = "block";
+        setTimeout(populateSelfAccountSelectors, 0);  // Ensure accounts are populated after form is displayed
+      } else if (type === 'bank') {
+        document.getElementById("bankForm").style.display = "block";
+        setTimeout(populateBankFromAccountSelector, 0);
+      } else if (type === 'upi') {
+        document.getElementById("upiForm").style.display = "block";
+        setTimeout(populateUPIFromAccountSelector, 0);
+      }
+    }
+
+    function populateSelfAccountSelectors() {
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+      // Use accountData directly as it is keyed by "savings" and "business"
+      const fromSelect = document.getElementById("selfFromAccount");
+      const toSelect = document.getElementById("selfToAccount");
+
+      // Clear existing options
+      fromSelect.innerHTML = '<option value="">Select account</option>';
+      toSelect.innerHTML = '<option value="">Select account</option>';
+
+      // Populate savings account with account number displayed
+      if (accountData.savings) {
+        const optionFrom = document.createElement("option");
+        optionFrom.value = accountData.savings.accountNumber;
+        optionFrom.textContent = `Savings Account - ${accountData.savings.accountNumber}`;
+        fromSelect.appendChild(optionFrom);
+
+        const optionTo = document.createElement("option");
+        optionTo.value = accountData.savings.accountNumber;
+        optionTo.textContent = `Savings Account - ${accountData.savings.accountNumber}`;
+        toSelect.appendChild(optionTo);
+      }
+
+      // Populate business account with account number displayed
+      if (accountData.business) {
+        const optionFrom = document.createElement("option");
+        optionFrom.value = accountData.business.accountNumber;
+        optionFrom.textContent = `Business Account - ${accountData.business.accountNumber}`;
+        fromSelect.appendChild(optionFrom);
+
+        const optionTo = document.createElement("option");
+        optionTo.value = accountData.business.accountNumber;
+        optionTo.textContent = `Business Account - ${accountData.business.accountNumber}`;
+        toSelect.appendChild(optionTo);
+      }
+    }
+
+    function handleSelfTransfer() {
+      const amount = parseFloat(document.getElementById("selfAmount").value);
+      const fromAccountNumber = document.getElementById("selfFromAccount").value;
+      const toAccountNumber = document.getElementById("selfToAccount").value;
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+
+      if (!fromAccountNumber || !toAccountNumber) {
+        alert("Please select both From and To accounts.");
+        return;
+      }
+
+      if (fromAccountNumber === toAccountNumber) {
+        alert("From and To accounts cannot be the same.");
+        return;
+      }
+
+      const fromAccountKey = Object.keys(accountData).find(key => accountData[key].accountNumber === fromAccountNumber);
+      const toAccountKey = Object.keys(accountData).find(key => accountData[key].accountNumber === toAccountNumber);
+
+      if (!fromAccountKey || !toAccountKey) {
+        alert("Invalid account selection.");
+        return;
+      }
+
+      const pin = prompt("Enter PIN for the From Account:");
+
+      if (pin !== accountData[fromAccountKey].pin) {
+        alert("Incorrect PIN. Transfer cancelled.");
+        return;
+      }
+
+      if (accountData[fromAccountKey].balance < amount) {
+        alert("Insufficient funds.");
+        return;
+      }
+
+      // Perform transfer
+      accountData[fromAccountKey].balance -= amount;
+      accountData[fromAccountKey].transactions.push({
+        date: new Date().toISOString().split('T')[0],
+        type: 'Debit',
+        amount: amount,
+        details: `Self Transfer to ${toAccountNumber}`
+      });
+
+      accountData[toAccountKey].balance += amount;
+      accountData[toAccountKey].transactions.push({
+        date: new Date().toISOString().split('T')[0],
+        type: 'Credit',
+        amount: amount,
+        details: `Self Transfer from ${fromAccountNumber}`
+      });
+
+      // Update localStorage
+      localStorage.setItem("accountData", JSON.stringify(accountData));
+
+      // If currentUser is fromAccount, update currentUser balance and accountNumber
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (currentUser.accountNumber === fromAccountNumber) {
+        currentUser.balance = accountData[fromAccountKey].balance;
+        currentUser.accountNumber = accountData[fromAccountKey].accountNumber;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+
+      alert(`₹${amount} transferred successfully from ${fromAccountNumber} to ${toAccountNumber}.`);
+
+      // Reset input fields
+      document.getElementById("selfFromAccount").value = "";
+      document.getElementById("selfToAccount").value = "";
+      document.getElementById("selfAmount").value = "";
+    }
+
+    function handleBankTransfer() {
+      // This function is no longer called directly
+    }
+
+    function validateAccountNumber(accountNumber) {
+      // Check if account number contains only digits
+      const regex = /^\d+$/;
+      return regex.test(accountNumber);
+    }
+
+    function validateUPIId(upiId) {
+      // Check if UPI ID contains exactly one '@' and valid characters
+      const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/;
+      return regex.test(upiId);
+    }
+
+    function promptBankFromAccount() {
+      const recipientAccountNumber = document.getElementById("bankAccount").value.trim();
+      const ifscCode = document.getElementById("bankIFSC").value.trim();
+      const amount = parseFloat(document.getElementById("bankAmount").value);
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+
+      if (!recipientAccountNumber || !ifscCode || isNaN(amount) || amount <= 0) {
+        alert("Please fill in all fields with valid values.");
+        return;
+      }
+
+      if (!validateAccountNumber(recipientAccountNumber)) {
+        alert("Invalid account number. It should contain digits only.");
+        return;
+      }
+
+      // Show prompt to select from account
+      const fromAccountNumber = promptFromAccountSelection();
+      if (!fromAccountNumber) {
+        alert("Transfer cancelled. No From Account selected.");
+        return;
+      }
+
+      performBankTransfer(fromAccountNumber, recipientAccountNumber, ifscCode, amount, accountData);
+    }
+
+    function performBankTransfer(fromAccountNumber, recipientAccountNumber, ifscCode, amount, accountData) {
+      const fromAccountKey = Object.keys(accountData).find(key => accountData[key].accountNumber === fromAccountNumber);
+      if (!fromAccountKey) {
+        alert("Invalid From Account selected.");
+        return;
+      }
+      const fromAccount = accountData[fromAccountKey];
+
+      if (fromAccount.balance < amount) {
+        alert("Insufficient funds.");
+        return;
+      }
+
+      const pin = prompt(`Enter PIN for the ${fromAccountKey.charAt(0).toUpperCase() + fromAccountKey.slice(1)} Account:`);
+
+      if (pin !== fromAccount.pin) {
+        alert("Incorrect PIN. Transfer cancelled.");
+        return;
+      }
+
+      // Perform transfer (deduct from selected account)
+      fromAccount.balance -= amount;
+      fromAccount.transactions.push({
+        date: new Date().toISOString().split('T')[0],
+        type: 'Debit',
+        amount: amount,
+        details: `Bank Transfer to ${recipientAccountNumber} (IFSC: ${ifscCode})`
+      });
+
+      // Update localStorage
+      localStorage.setItem("accountData", JSON.stringify(accountData));
+
+      // Update currentUser balance and accountNumber if applicable
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (currentUser.accountNumber === fromAccount.accountNumber) {
+        currentUser.balance = fromAccount.balance;
+        currentUser.accountNumber = fromAccount.accountNumber;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+
+      alert(`₹${amount} transferred successfully to account ${recipientAccountNumber} (IFSC: ${ifscCode}).`);
+
+      // Reset input fields
+      document.getElementById("bankAccount").value = "";
+      document.getElementById("bankIFSC").value = "";
+      document.getElementById("bankAmount").value = "";
+    }
+
+    function handleUPITransfer() {
+      // This function is no longer called directly
+    }
+
+    function promptUPIFromAccount() {
+      const upiId = document.getElementById("upiId").value.trim();
+      const category = document.getElementById("upiCategory").value;
+      const amount = parseFloat(document.getElementById("upiAmount").value);
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+
+      if (!upiId || !category || isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid UPI ID, category, and amount.");
+        return;
+      }
+
+      if (!validateUPIId(upiId)) {
+        alert("Invalid UPI ID. It should contain exactly one '@' and valid characters.");
+        return;
+      }
+
+      // Show prompt to select from account
+      const fromAccountNumber = promptFromAccountSelection();
+      if (!fromAccountNumber) {
+        alert("Transfer cancelled. No From Account selected.");
+        return;
+      }
+
+      performUPITransfer(fromAccountNumber, upiId, category, amount, accountData);
+    }
+
+    function performUPITransfer(fromAccountNumber, upiId, category, amount, accountData) {
+      const fromAccountKey = Object.keys(accountData).find(key => accountData[key].accountNumber === fromAccountNumber);
+      if (!fromAccountKey) {
+        alert("Invalid From Account selected.");
+        return;
+      }
+      const fromAccount = accountData[fromAccountKey];
+
+      if (fromAccount.balance < amount) {
+        alert("Insufficient funds.");
+        return;
+      }
+
+      const pin = prompt(`Enter PIN for the ${fromAccountKey.charAt(0).toUpperCase() + fromAccountKey.slice(1)} Account:`);
+
+      if (pin !== fromAccount.pin) {
+        alert("Incorrect PIN. Transfer cancelled.");
+        return;
+      }
+
+      // Perform transfer (deduct from selected account)
+      fromAccount.balance -= amount;
+      fromAccount.transactions.push({
+        date: new Date().toISOString().split('T')[0],
+        type: 'Debit',
+        amount: amount,
+        details: `UPI Transfer to ${upiId}`,
+        category: category
+      });
+
+      // Update localStorage
+      localStorage.setItem("accountData", JSON.stringify(accountData));
+
+      // Update currentUser balance and accountNumber if applicable
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (currentUser.accountNumber === fromAccount.accountNumber) {
+        currentUser.balance = fromAccount.balance;
+        currentUser.accountNumber = fromAccount.accountNumber;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+
+      alert(`₹${amount} transferred successfully to UPI ID ${upiId}.`);
+
+      // Reset input fields
+      document.getElementById("upiId").value = "";
+      document.getElementById("upiCategory").value = "";
+      document.getElementById("upiAmount").value = "";
+    }
+
+    function promptPIN() {
+      return prompt("Enter your PIN to confirm:");
+    }
+
+    function promptFromAccountSelection() {
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+      // Use accountData directly as it is keyed by "savings" and "business"
+      const accountNumbers = [];
+      const accountLabels = [];
+
+      if (accountData.savings) {
+        accountNumbers.push(accountData.savings.accountNumber);
+        accountLabels.push("Savings Account");
+      }
+      if (accountData.business) {
+        accountNumbers.push(accountData.business.accountNumber);
+        accountLabels.push("Business Account");
+      }
+
+      let promptMessage = "Select From Account by entering the number:\n";
+      for (let i = 0; i < accountNumbers.length; i++) {
+        promptMessage += `${i + 1}. ${accountLabels[i]} - ${accountNumbers[i]}\n`;
+      }
+      const choice = prompt(promptMessage);
+      const choiceIndex = parseInt(choice) - 1;
+      if (choiceIndex >= 0 && choiceIndex < accountNumbers.length) {
+        return accountNumbers[choiceIndex];
+      }
+      return null;
+    }
+
+    function populateBankFromAccountSelector() {
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+      const bankFromSelect = document.getElementById("bankFromAccount");
+      bankFromSelect.innerHTML = '<option value="">Select account</option>';
+      for (const key in accountData) {
+        const account = accountData[key];
+        const option = document.createElement("option");
+        option.value = account.accountNumber;
+        option.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)} Account - ${account.accountNumber}`;
+        bankFromSelect.appendChild(option);
+      }
+    }
+
+    function populateUPIFromAccountSelector() {
+      const accountData = JSON.parse(localStorage.getItem("accountData"));
+      const upiFromSelect = document.getElementById("upiFromAccount");
+      upiFromSelect.innerHTML = '<option value="">Select account</option>';
+      for (const key in accountData) {
+        const account = accountData[key];
+        const option = document.createElement("option");
+        option.value = account.accountNumber;
+        option.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)} Account - ${account.accountNumber}`;
+        upiFromSelect.appendChild(option);
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Bankify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-color: #222;
+      --subtext-color: #555;
+      --primary-color: #4ca1af;
+    }
+
+    body.dark-mode {
+      --bg-gradient: linear-gradient(135deg, #1a1a1a, #333);
+      --card-bg: #1e1e1e;
+      --text-color: #f5f5f5;
+      --subtext-color: #ccc;
+      --primary-color: #90caf9;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+    }
+
+    .welcome-section {
+      background: #2c3e50;
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .cards-section {
+      padding: 40px 15px 20px;
+    }
+
+    .dashboard-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      transition: transform 0.3s ease;
+      color: var(--text-color);
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .dashboard-card i {
+      font-size: 2.2rem;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      color: var(--subtext-color);
+    }
+
+    .card-text {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .charts-section {
+      padding: 30px 15px 60px;
+    }
+
+    canvas {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="header"></div>
+
+  <!-- Welcome -->
+  <section class="welcome-section">
+    <h1>Welcome to Bankify, <span id="userName">User</span>!</h1>
+  </section>
+
+  <!-- Cards -->
+  <section class="container cards-section">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fas fa-wallet"></i>
+          <div class="card-title">Account Balance</div>
+          <div class="card-text" id="accountBalance">₹0.00</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fas fa-arrow-right-arrow-left"></i>
+          <div class="card-title">Last Transaction</div>
+          <div class="card-text" id="lastTransaction">₹0 to Unknown</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fas fa-id-card"></i>
+          <div class="card-title">Account Type</div>
+          <div class="card-text" id="accountType">Not Available</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts -->
+  <section class="container charts-section">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <canvas id="balanceChart" height="250"></canvas>
+      </div>
+      <div class="col-md-6">
+        <canvas id="spendingChart" height="250"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div id="footer"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Load header and footer
+    fetch('header2.html')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('header').innerHTML = data;
+
+        // Script to set profile initial after header2.html is loaded
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const profileInitial = document.getElementById('profileInitial');
+        
+        if (currentUser && currentUser.name) {
+          profileInitial.textContent = currentUser.name.charAt(0).toUpperCase();
+          profileInitial.style.backgroundColor = '#f39c12';
+        } else {
+          profileInitial.textContent = 'U';
+          profileInitial.style.backgroundColor = '#f39c12';
+        }
+      });
+
+    fetch('footer.html')
+      .then(res => res.text())
+      .then(data => document.getElementById('footer').innerHTML = data);
+
+    // Utility function to get account data from localStorage by matching currentUser accountNumber
+    function getAccountData() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (!currentUser) return null;
+      const accountData = JSON.parse(localStorage.getItem('accountData')) || {};
+      // accountData keys are 'savings' and 'business'
+      for (const key of ['savings', 'business']) {
+        if (accountData[key] && accountData[key].accountNumber === currentUser.accountNumber) {
+          return accountData[key];
+        }
+      }
+      return null;
+    }
+
+    // Compute last transaction string
+    function getLastTransactionString(transactions) {
+      if (!transactions || transactions.length === 0) return '₹0 to Unknown';
+      const lastTx = transactions[transactions.length - 1];
+      return `₹${lastTx.amount} ${lastTx.type === 'Debit' ? 'to' : 'from'} ${lastTx.details}`;
+    }
+
+    // Compute balance history (simple example: cumulative balance over transaction dates)
+    function computeBalanceHistory(transactions, initialBalance) {
+      if (!transactions || transactions.length === 0) return [];
+      // Sort transactions by date ascending
+      const sortedTx = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+      let balance = initialBalance || 0;
+      const balanceHistory = [];
+      sortedTx.forEach(tx => {
+        if (tx.type === 'Credit') {
+          balance += tx.amount;
+        } else if (tx.type === 'Debit') {
+          balance -= tx.amount;
+        }
+        balanceHistory.push(balance);
+      });
+      return balanceHistory;
+    }
+
+    // Compute spending categories from transactions (including UPI transfer categories)
+    function computeSpendingCategories(transactions) {
+      if (!transactions || transactions.length === 0) return {};
+      const categories = {};
+      transactions.forEach(tx => {
+        if (tx.type === 'Debit') {
+          // Use category field if present (for UPI transfers)
+          let category = tx.category || null;
+          if (!category) {
+            // Extract category from details, e.g. "Bill - Airtel" => "Bill"
+            if (tx.details) {
+              const parts = tx.details.split(' - ');
+              if (parts.length > 1) {
+                category = parts[0];
+              } else {
+                // Check for UPI transfer keywords
+                if (tx.details.toLowerCase().includes('upi')) {
+                  category = 'UPI Transfer';
+                } else {
+                  category = 'Other';
+                }
+              }
+            } else {
+              category = 'Other';
+            }
+          }
+          categories[category] = (categories[category] || 0) + tx.amount;
+        }
+      });
+      return categories;
+    }
+
+    // Update dashboard cards and charts
+    function updateDashboard() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      const accountData = getAccountData();
+
+      if (!currentUser || !accountData) {
+        alert('Account data not found. Please log in again.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Update cards
+      document.getElementById('userName').textContent = currentUser.name || 'User';
+      // Always use accountData.balance for latest balance display
+      document.getElementById('accountBalance').textContent = '₹' + accountData.balance.toFixed(2);
+      document.getElementById('accountType').textContent = currentUser.accountType || 'Not Available';
+      document.getElementById('lastTransaction').textContent = getLastTransactionString(accountData.transactions);
+
+      // Compute balance history for chart
+      const balanceHistory = computeBalanceHistory(accountData.transactions, accountData.balance);
+
+      // Compute spending categories for chart
+      const spendingCategories = computeSpendingCategories(accountData.transactions);
+      const spendingLabels = Object.keys(spendingCategories);
+      const spendingData = Object.values(spendingCategories);
+
+      // Destroy existing charts if any
+      if (window.balanceChartInstance) {
+        window.balanceChartInstance.destroy();
+      }
+      if (window.spendingChartInstance) {
+        window.spendingChartInstance.destroy();
+      }
+
+      // Create balance chart
+      window.balanceChartInstance = new Chart(document.getElementById('balanceChart'), {
+        type: 'line',
+        data: {
+          labels: balanceHistory.map((_, i) => `Tx ${i + 1}`),
+          datasets: [{
+            label: 'Balance (₹)',
+            data: balanceHistory,
+            borderColor: '#4ca1af',
+            backgroundColor: 'rgba(76, 161, 175, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // Create spending chart
+      window.spendingChartInstance = new Chart(document.getElementById('spendingChart'), {
+        type: 'doughnut',
+        data: {
+          labels: spendingLabels.length ? spendingLabels : ['No Spending'],
+          datasets: [{
+            data: spendingData.length ? spendingData : [1],
+            backgroundColor: ['#42a5f5', '#66bb6a', '#ffa726', '#ab47bc', '#ef5350', '#90caf9', '#f48fb1', '#ce93d8']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // Listen for changes in localStorage to update dashboard dynamically
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'currentUser' || event.key === 'accountData' || event.key === 'transactions') {
+        updateDashboard();
+      }
+    });
+
+    // On page load
+    document.addEventListener('DOMContentLoaded', () => {
+      updateDashboard();
+    });
+
+    // On page load
+    document.addEventListener('DOMContentLoaded', () => {
+      updateDashboard();
+    });
+  </script>
+</body>
+</html>

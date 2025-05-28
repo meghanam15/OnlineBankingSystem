@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - Bankify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #2c3e50, #4ca1af);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-color: #222;
+      --subtext-color: #555;
+      --primary-color: #4ca1af;
+    }
+
+    body.dark-mode {
+      --bg-gradient: linear-gradient(135deg, #1a1a1a, #333);
+      --card-bg: #1e1e1e;
+      --text-color: #f5f5f5;
+      --subtext-color: #ccc;
+      --primary-color: #90caf9;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+    }
+
+    .welcome-section {
+      background: #2c3e50;
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .cards-section {
+      padding: 40px 15px 20px;
+    }
+
+    .dashboard-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      transition: transform 0.3s ease;
+      color: var(--text-color);
+      cursor: pointer;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .dashboard-card i {
+      font-size: 2.2rem;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      color: var(--subtext-color);
+    }
+
+    .card-text {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1050;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 8px;
+      max-width: 450px;
+      width: 90%;
+      z-index: 1060;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .modal.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="header"></div>
+
+  <!-- Welcome -->
+  <section class="welcome-section">
+    <h1>Welcome, Admin!</h1>
+  </section>
+
+  <!-- Admin Feature Cards -->
+  <section class="container cards-section">
+  <div class="d-flex justify-content-center flex-wrap gap-4">
+    <div class="col-md-4">
+      <div class="dashboard-card" onclick="showUsers()">
+        <i class="fas fa-users"></i>
+        <div class="card-title">View Users</div>
+        <div class="card-text">Manage user accounts</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dashboard-card" onclick="showEditUsers()">
+        <i class="fas fa-edit"></i>
+        <div class="card-title">Modify Users</div>
+        <div class="card-text">Edit user details</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  <!-- User List Table (View Users) -->
+  <div class="container mt-4" id="userListSection" style="display: none;">
+    <h3 class="mb-3">Signed Up Users</h3>
+    <table class="table table-bordered table-hover bg-white">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th>
+          <th>Account Number</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Edit User List Table -->
+  <div class="container mt-4" id="editUserListSection" style="display: none;">
+    <h3 class="mb-3">Edit Users</h3>
+    <table class="table table-bordered table-hover bg-white">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Account Number</th>
+          <th>Balance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="editUserTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="editUserModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
+    <h5 id="editUserModalTitle">Edit User Details</h5>
+    <form id="editUserForm">
+      <div class="mb-3">
+        <label for="editName" class="form-label">Name</label>
+        <input type="text" id="editName" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label for="editEmail" class="form-label">Email (cannot edit)</label>
+        <input type="email" id="editEmail" class="form-control" readonly />
+      </div>
+      <div class="mb-3">
+        <label for="editPhone" class="form-label">Phone</label>
+        <input type="text" id="editPhone" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label for="editAccountNumber" class="form-label">Account Number</label>
+        <input type="text" id="editAccountNumber" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label for="editBalance" class="form-label">Balance</label>
+        <input type="number" step="0.01" min="0" id="editBalance" class="form-control" />
+      </div>
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-secondary me-2" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+  <div id="modalBackdrop" class="modal-backdrop" style="display:none;" onclick="closeEditModal()"></div>
+
+  <!-- Footer -->
+  <div id="footer"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Load header and footer
+    fetch('header3.html')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('header').innerHTML = data;
+        const profileInitial = document.getElementById('profileInitial');
+        if (profileInitial) {
+          profileInitial.textContent = 'A';
+          profileInitial.style.backgroundColor = '#4ca1af';
+        }
+      });
+
+    fetch('footer.html')
+      .then(res => res.text())
+      .then(data => document.getElementById('footer').innerHTML = data);
+
+    // Filter users to exclude those with names starting with "admin" and remove duplicates by email
+    function filterUsers(users) {
+      const filtered = [];
+      const emails = new Set();
+
+      users.forEach(user => {
+        const name = (user.name || "").toLowerCase();
+        if (!name.startsWith("admin") && user.email && !emails.has(user.email)) {
+          emails.add(user.email);
+          filtered.push(user);
+        }
+      });
+
+      return filtered;
+    }
+
+    function getDefaultBalance(user) {
+      if (user.balance !== undefined && user.balance !== null && !isNaN(user.balance)) {
+        return parseFloat(user.balance).toFixed(2);
+      } else {
+        return (40000 + Math.random() * 10000).toFixed(2);
+      }
+    }
+
+    // Show users in "View Users" section
+    function showUsers() {
+      hideAllSections();
+      const usersRaw = JSON.parse(localStorage.getItem("users")) || [];
+      const users = filterUsers(usersRaw);
+
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = "";
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center">No users found.</td></tr>`;
+      } else {
+        users.forEach(user => {
+          if(!user.accountNumber || user.accountNumber.trim() === '') return; // skip users without accountNumber
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${user.name || '-'}</td>
+            <td>${user.accountNumber}</td>
+            <td>${getDefaultBalance(user)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById("userListSection").style.display = "block";
+    }
+
+    // Show users in "Edit User Details" section
+    function showEditUsers() {
+      hideAllSections();
+      const usersRaw = JSON.parse(localStorage.getItem("users")) || [];
+      const users = filterUsers(usersRaw);
+
+      const tbody = document.getElementById("editUserTableBody");
+      tbody.innerHTML = "";
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No users found.</td></tr>`;
+      } else {
+        users.forEach(user => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${user.name || '-'}</td>
+            <td>${user.email}</td>
+            <td>${user.phone || '-'}</td>
+            <td>${user.accountNumber || '-'}</td>
+            <td>${getDefaultBalance(user)}</td>
+            <td>
+              <button class="btn btn-sm btn-warning" onclick="startEditUser('${user.email}')">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.email}')">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById("editUserListSection").style.display = "block";
+    }
+
+    // Hide all content sections
+    function hideAllSections() {
+      document.getElementById("userListSection").style.display = "none";
+      document.getElementById("editUserListSection").style.display = "none";
+      closeEditModal();
+    }
+
+    // Edit user modal logic
+    function startEditUser(email) {
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const user = users.find(u => u.email === email);
+      if (!user) {
+        alert("User not found");
+        return;
+      }
+
+      document.getElementById("editName").value = user.name || "";
+      document.getElementById("editEmail").value = user.email || "";
+      document.getElementById("editPhone").value = user.phone || "";
+      document.getElementById("editAccountNumber").value = user.accountNumber || "";
+      document.getElementById("editBalance").value = user.balance !== undefined ? user.balance : "";
+
+      showEditModal();
+    }
+
+    function showEditModal() {
+      document.getElementById("editUserModal").classList.add("show");
+      document.getElementById("modalBackdrop").style.display = "block";
+    }
+
+    function closeEditModal() {
+      document.getElementById("editUserModal").classList.remove("show");
+      document.getElementById("modalBackdrop").style.display = "none";
+    }
+
+    // Save edited user data
+    document.getElementById("editUserForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("editName").value.trim();
+      const email = document.getElementById("editEmail").value.trim();
+      const phone = document.getElementById("editPhone").value.trim();
+      const accountNumber = document.getElementById("editAccountNumber").value.trim();
+      let balance = document.getElementById("editBalance").value;
+
+      if(balance === '') balance = null;
+      else balance = parseFloat(balance);
+
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+      const userIndex = users.findIndex(u => u.email === email);
+      if(userIndex === -1){
+        alert("User not found");
+        closeEditModal();
+        return;
+      }
+
+      users[userIndex] = {
+        ...users[userIndex],
+        name,
+        phone,
+        accountNumber,
+        balance
+      };
+
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("User updated successfully.");
+      closeEditModal();
+      showEditUsers();
+    });
+
+    // Delete user
+    function deleteUser(email) {
+      if(!confirm("Are you sure you want to delete this user?")) return;
+
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+      users = users.filter(u => u.email !== email);
+
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("User deleted.");
+      showEditUsers();
+    }
+
+  </script>
+</body>
+</html>

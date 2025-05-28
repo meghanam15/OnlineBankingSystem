@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recharge & Bill Payments - Bankify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #2c3e50, #4ca1af);
+      font-family: 'Segoe UI', sans-serif;
+      color: #eee;
+      min-height: 100vh;
+    }
+    .section-title {
+      text-align: center;
+      margin-top: 40px;
+      margin-bottom: 30px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .category-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      color: #333;
+    }
+    .category-card:hover {
+      transform: translateY(-5px);
+      background: #f1f1f1;
+    }
+    .category-icon {
+      font-size: 24px;
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+    .glass {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      max-width: 600px;
+      margin: 30px auto;
+      display: none;
+    }
+    .glass.visible {
+      display: block;
+    }
+    .btn-custom {
+      background-color: #f9c74f;
+      color: #1a1a1a;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      padding: 10px 30px;
+    }
+    .btn-custom:hover {
+      background-color: #ffd166;
+      color: #000;
+    }
+    .form-control, .form-select {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      border: none;
+    }
+    .form-control::placeholder {
+      color: #ccc;
+    }
+    .form-select {
+      background: rgba(255, 255, 255, 0.95);
+      color: #000;
+      border: 1px solid #ccc;
+      appearance: auto;
+    }
+    .form-select option {
+      color: #000;
+    }
+    label {
+      font-weight: 500;
+    }
+    .offers {
+      font-size: 14px;
+      margin-top: 5px;
+      color: #ffd166;
+    }
+  </style>
+</head>
+<body>
+  <div id="header"></div>
+  <h2 class="section-title">Recharge & Bill Payments</h2>
+
+  <div class="container">
+    <div class="row g-3 justify-content-center">
+      <!-- Card Categories -->
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="category-card" onclick="selectCategory('mobile')">
+          <i class="fa fa-bolt category-icon"></i>
+          <div>Mobile Recharge</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="category-card" onclick="selectCategory('electricity')">
+          <i class="fa fa-lightbulb category-icon"></i>
+          <div>Electricity</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="category-card" onclick="selectCategory('dth')">
+          <i class="fa fa-tv category-icon"></i>
+          <div>DTH / Cable TV</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="category-card" onclick="selectCategory('broadband')">
+          <i class="fa fa-wifi category-icon"></i>
+          <div>Broadband</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="category-card" onclick="selectCategory('creditcard')">
+          <i class="fa fa-credit-card category-icon"></i>
+          <div>Credit Card</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="category-card" onclick="selectCategory('insurance')">
+          <i class="fa fa-file-invoice category-icon"></i>
+          <div>Insurance</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass" id="providerContainer">
+    <div class="mb-3">
+      <label for="provider" class="form-label">Select Provider</label>
+      <select id="provider" class="form-select" required>
+        <option value="">-- Select Provider --</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="glass" id="formContainer">
+    <form id="serviceForm">
+      <div class="mb-3">
+        <label id="label1" class="form-label"></label>
+        <input type="text" class="form-control" id="field1" required />
+      </div>
+      <div class="mb-3" id="dataPlanContainer" style="display: none;">
+        <label for="dataPlan" class="form-label">Select Data Plan</label>
+        <select id="dataPlan" class="form-select"></select>
+      </div>
+      <div class="mb-3" id="cardTypeContainer" style="display: none;">
+        <label for="cardType" class="form-label">Select Credit Card Type</label>
+        <select id="cardType" class="form-select"></select>
+        <div id="cardOffer" class="offers"></div>
+      </div>
+      <div class="mb-3" id="dueDateContainer" style="display: none;">
+        <label for="dueDate" class="form-label">Payment Due Date</label>
+        <input type="text" class="form-control" id="dueDate"/>
+      </div>
+      <div class="mb-3">
+        <label for="amount" class="form-label">Amount</label>
+        <input type="number" class="form-control" id="amount" required />
+      </div>
+      <button type="submit" class="btn btn-primary w-100" id="proceedToPayBtn">Proceed to Pay</button>
+    </form>
+  </div>
+
+  <div id="footer" class="mt-5"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    fetch('header2.html')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('header').innerHTML = data;
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const profileInitial = document.getElementById('profileInitial');
+        if (currentUser && currentUser.name) {
+          profileInitial.textContent = currentUser.name.charAt(0).toUpperCase();
+          profileInitial.style.backgroundColor = '#f39c12';
+        }
+      });
+    fetch('footer.html').then(res => res.text()).then(data => document.getElementById('footer').innerHTML = data);
+
+    const categories = {
+      mobile: {
+        label: "Mobile Number",
+        providers: ['Airtel', 'Jio', 'Vi', 'BSNL']
+      },
+      electricity: {
+        label: "Consumer Number",
+        providers: ['CESCOM', 'BESCOM', 'Adani', 'Torrent']
+      },
+      dth: {
+        label: "Subscriber ID",
+        providers: ['Tata Play', 'Airtel DTH', 'DishTV', 'Sun Direct']
+      },
+      broadband: {
+        label: "Customer ID",
+        providers: ['ACT', 'JioFiber', 'Airtel Xstream','BSNL']
+      },
+      creditcard: {
+        label: "Card Number",
+        providers: ['HDFC', 'SBI', 'ICICI', 'Axis']
+      },
+      insurance: {
+        label: "Policy Number",
+        providers: ['LIC', 'HDFC Life', 'ICICI Pru','CholaMandalam']
+      }
+    };
+
+    const dataPlans = {
+      Airtel: ['1.5GB/day - ₹199', '2GB/day - ₹249', '2.5GB/day - ₹399','3GB/day - ₹499','4GB/day - ₹999'],
+      Jio: ['1.5GB/day - ₹209', '2GB/day - ₹239', '2.5GB/day - ₹399','3GB/day - ₹399','4GB/day - ₹999'],
+      BSNL: ['1GB/day - ₹187', '2GB/day - ₹247','2.5GB/day - ₹399','3GB/day - ₹499','4GB/day - ₹899'],
+      Vi: ['1.5GB/day - ₹199', '2GB/day - ₹249', '2.5GB/day - ₹399','3GB/day - ₹499','4GB/day - ₹799']
+    };
+
+    const creditCardTypes = {
+      HDFC: { types: ['Platinum', 'Regalia'], offers: { Platinum: "5% Cashback on groceries", Regalia: "Lounge Access + 2x Reward Points" } },
+      SBI: { types: ['SimplySAVE', 'Elite'], offers: { SimplySAVE: "10% on dining", Elite: "Movie tickets free every month" } },
+      ICICI: { types: ['Coral', 'Rubyx'], offers: { Coral: "Free movie tickets", Rubyx: "Bonus reward points" } },
+      Axis: { types: ['Buzz', 'Magnus'], offers: { Buzz: "Amazon gift cards", Magnus: "5X points on travel" } }
+    };
+
+    const providerSelect = document.getElementById('provider');
+    const providerContainer = document.getElementById('providerContainer');
+    const formContainer = document.getElementById('formContainer');
+    const label1 = document.getElementById('label1');
+    const field1 = document.getElementById('field1');
+    const dataPlanContainer = document.getElementById('dataPlanContainer');
+    const dataPlanSelect = document.getElementById('dataPlan');
+    const cardTypeContainer = document.getElementById('cardTypeContainer');
+    const cardTypeSelect = document.getElementById('cardType');
+    const cardOffer = document.getElementById('cardOffer');
+    const dueDateContainer = document.getElementById('dueDateContainer');
+
+    let selectedCategory = '';
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      providerSelect.innerHTML = '<option value="">-- Select Provider --</option>';
+      categories[cat].providers.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        providerSelect.appendChild(opt);
+      });
+
+      label1.textContent = categories[cat].label;
+      field1.placeholder = categories[cat].label;
+
+      providerContainer.classList.add('visible');
+      formContainer.classList.remove('visible');
+      dataPlanContainer.style.display = 'none';
+      cardTypeContainer.style.display = 'none';
+      dueDateContainer.style.display = 'none';
+
+      providerSelect.onchange = () => {
+        const provider = providerSelect.value;
+        const showForm = provider !== "";
+        formContainer.classList.toggle('visible', showForm);
+
+        if (cat === 'mobile' && showForm) {
+          dataPlanContainer.style.display = 'block';
+          dataPlanSelect.innerHTML = '<option value="">-- Choose a plan --</option>';
+          dataPlans[provider]?.forEach(plan => {
+            const opt = document.createElement('option');
+            opt.value = plan;
+            opt.textContent = plan;
+            dataPlanSelect.appendChild(opt);
+          });
+          dataPlanSelect.onchange = () => {
+            const selected = dataPlanSelect.value;
+            const amountMatch = selected.match(/₹(\d+)/);
+            if (amountMatch) {
+              document.getElementById('amount').value = amountMatch[1];
+            }
+          };
+        } else {
+          dataPlanContainer.style.display = 'none';
+        }
+
+        if (cat === 'creditcard' && showForm) {
+          cardTypeContainer.style.display = 'block';
+          dueDateContainer.style.display = 'block';
+          cardTypeSelect.innerHTML = '<option value="">-- Select Card Type --</option>';
+          const cards = creditCardTypes[provider]?.types || [];
+          cards.forEach(type => {
+            const opt = document.createElement('option');
+            opt.value = type;
+            opt.textContent = type;
+            cardTypeSelect.appendChild(opt);
+          });
+          cardTypeSelect.onchange = () => {
+            const selected = cardTypeSelect.value;
+            cardOffer.textContent = creditCardTypes[provider]?.offers[selected] || '';
+          };
+        } else {
+          cardTypeContainer.style.display = 'none';
+          dueDateContainer.style.display = 'none';
+        }
+      };
+    }
+
+    function validateMobileNumber(mobile) {
+      const regex = /^\d{10}$/;
+      return regex.test(mobile);
+    }
+
+    function validateFieldByCategory(category, value) {
+      switch (category) {
+        case 'mobile':
+          return /^\d{10}$/.test(value);
+        case 'electricity':
+          return /^\d{6,11}$/.test(value);
+        case 'dth':
+          return /^[a-zA-Z0-9]{6,}$/.test(value);
+        case 'broadband':
+          return /^[a-zA-Z0-9]{6,}$/.test(value);
+        case 'creditcard':
+          return /^\d{12,19}$/.test(value);
+        case 'insurance':
+          return /^[a-zA-Z0-9]{6,}$/.test(value);
+        default:
+          return true;
+      }
+    }
+
+    document.getElementById('serviceForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const id = field1.value.trim();
+      const amount = document.getElementById('amount').value.trim();
+      const provider = providerSelect.value;
+      const dataPlan = selectedCategory === 'mobile' ? dataPlanSelect.value : 'N/A';
+      const cardType = selectedCategory === 'creditcard' ? cardTypeSelect.value : 'N/A';
+      const dueDate = selectedCategory === 'creditcard' ? document.getElementById('dueDate').value : 'N/A';
+
+      if (!id || !amount || !provider || (selectedCategory === 'mobile' && !dataPlan) || (selectedCategory === 'creditcard' && (!cardType || !dueDate))) {
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      if (!validateFieldByCategory(selectedCategory, id)) {
+        let message = '';
+        switch (selectedCategory) {
+          case 'mobile':
+            message = 'Invalid mobile number. It should contain exactly 10 digits.';
+            break;
+          case 'electricity':
+            message = 'Invalid consumer number. It should contain 6-12 digits.';
+            break;
+          case 'dth':
+            message = 'Invalid subscriber ID. It should be alphanumeric and at least 6 characters.';
+            break;
+          case 'broadband':
+            message = 'Invalid customer ID. It should be alphanumeric and at least 6 characters.';
+            break;
+          case 'creditcard':
+            message = 'Invalid card number. It should contain 12 to 19 digits.';
+            break;
+          case 'insurance':
+            message = 'Invalid policy number. It should be alphanumeric and at least 6 characters.';
+            break;
+          default:
+            message = 'Invalid input.';
+        }
+        alert(message);
+        return;
+      }
+
+      const accountData = JSON.parse(localStorage.getItem('accountData'));
+      const accountLabels = ['Savings Account', 'Business Account'];
+
+      let accountChoice = prompt(
+        `Select account to pay from:\n1. ${accountLabels[0]}\n2. ${accountLabels[1]}`
+      );
+
+      if (accountChoice !== '1' && accountChoice !== '2') {
+        alert('Invalid account selection. Payment cancelled.');
+        return;
+      }
+
+      const accountKey = accountChoice === '1' ? 'savings' : 'business';
+      const pin = prompt(`Enter PIN for ${accountLabels[accountChoice - 1]}:`);
+
+      if (!pin) {
+        alert('PIN entry cancelled. Payment cancelled.');
+        return;
+      }
+
+      if (pin !== accountData[accountKey].pin) {
+        alert('Incorrect PIN. Payment cancelled.');
+        return;
+      }
+
+      if (accountData[accountKey].balance < parseFloat(amount)) {
+        alert('Insufficient balance. Payment cancelled.');
+        return;
+      }
+
+      // Deduct amount from selected account balance
+      accountData[accountKey].balance -= parseFloat(amount);
+
+      // Update localStorage with new balance
+      localStorage.setItem('accountData', JSON.stringify(accountData));
+
+      // Optionally update currentUser balance if applicable
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (currentUser.accountNumber === accountData[accountKey].accountNumber) {
+        currentUser.balance = accountData[accountKey].balance;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      }
+
+      const transaction = {
+        category: selectedCategory,
+        label: categories[selectedCategory].label,
+        accountId: id,
+        provider: provider,
+        amount: parseFloat(amount),
+        dataPlan: dataPlan,
+        cardType: cardType,
+        dueDate: dueDate,
+        accountType: accountLabels[accountChoice - 1],
+        date: new Date().toLocaleString()
+      };
+
+      // Add transaction to the selected account's transactions array in accountData
+      if (!accountData[accountKey].transactions) {
+        accountData[accountKey].transactions = [];
+      }
+      accountData[accountKey].transactions.push({
+        date: new Date().toISOString().split('T')[0],
+        type: 'Debit',
+        amount: parseFloat(amount),
+        details: `Bill Payment - ${categories[selectedCategory].label} (${provider})`
+      });
+
+      // Update localStorage with updated accountData
+      localStorage.setItem('accountData', JSON.stringify(accountData));
+
+      const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+      transactions.push(transaction);
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+
+      alert('Payment successful');
+
+      serviceForm.reset();
+      formContainer.classList.remove('visible');
+      providerContainer.classList.remove('visible');
+      dataPlanContainer.style.display = 'none';
+      cardTypeContainer.style.display = 'none';
+      dueDateContainer.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
